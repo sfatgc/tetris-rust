@@ -6,15 +6,15 @@ jobs:
   release:
     permissions: write-all
     name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
+    runs-on: macos-13
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-pc-windows-gnu
+          - target: x86_64-pc-windows-msvc
             archive: zip
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz tar.xz tar.zst
+          - target: x86_64-unknown-linux-gnu
+            archive: tar.gz
           - target: x86_64-apple-darwin
             archive: zip
           - target: aarch64-apple-darwin
