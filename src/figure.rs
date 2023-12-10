@@ -8,15 +8,19 @@ impl Figure {
     pub fn new(x: usize, y: usize, t: i32) -> Figure {
         Figure { position: Position::new(x,y), figure_type: t }
     }
-    fn move_down(&mut self) -> Result<&Figure, String> {
+    pub fn move_down(&mut self) -> Result<&Figure, String> {
         self.position.set_y(self.position.get_y() + 1);
         Ok(self)
     }
-    fn move_left(&mut self) -> Result<&Figure, String> {
-        self.position.set_x(self.position.get_x() - 1);
-        Ok(self)
+    pub fn move_left(&mut self) -> Result<&Figure, String> {
+        if self.position.get_x() > 1 {
+            self.position.set_x(self.position.get_x() - 1);
+            Ok(self)
+        } else {
+            Err("Left border".to_string())
+        }
     }
-    fn move_right(&mut self) -> Result<&Figure, String> {
+    pub fn move_right(&mut self) -> Result<&Figure, String> {
         self.position.set_x(self.position.get_x() + 1);
         Ok(self)
     }

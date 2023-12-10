@@ -1,14 +1,76 @@
+extern crate termion;
+use std::io::{Write, stdout, stdin};
+
+use termion::event::Key;
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
+
+
 use tetris_rust::frameblock::FrameBlock;
 use tetris_rust::framedata::FrameData;
 use tetris_rust::figure::Figure;
 fn main() {
+    let stdin = stdin();
+    let mut stdout = stdout().into_raw_mode().unwrap();
+    write!(stdout,
+        "{}{}q to exit. Type stuff, use alt, and so on.{}",
+        termion::clear::All,
+        termion::cursor::Goto(1, 1),
+        termion::cursor::Hide)
+         .unwrap();
+    stdout.flush().unwrap();
+
     println!("Hello, world!");
-    let frame_data: FrameData = FrameData::new(30, 50);
-    println!("{}", render_frame(30,50, frame_data));
+    
+    let mut frame_data: FrameData = FrameData::new(15, 20);
+    /* println!("{}", render_frame(frame_data)); */
+    
+    for c in stdin.keys() {
+        let mut command: String = "".to_string();
+        match c.unwrap() {
+            Key::Char('q') => break,
+            Key::Char(c) => {command = format!("{}", c)},
+            Key::Alt(c) => {command = format!("^{}", c)},
+            Key::Ctrl(c) => {command = format!("*{}", c)},
+            Key::Esc => {
+                command = format!("ESC")
+            },
+            Key::Left => {
+                frame_data.move_figure_left();
+                command = format!("←")
+            },
+            Key::Right => {
+                frame_data.move_figure_right();
+                command = format!("→")
+            },
+            Key::Up => {
+                command = format!("↑")
+            },
+            Key::Down => {
+                frame_data.move_figure_down();
+                command = format!("↓")
+            },
+            Key::Backspace => {command = format!("×")},
+            _ => {}
+        }
+        
+        write!(stdout,
+            "{}{}{}{}",
+            termion::cursor::Goto(1, 1),
+            termion::clear::All,
+            render_frame(&mut frame_data),
+            command)
+             .unwrap();
+
+        stdout.flush().unwrap();
+    }
+    write!(stdout, "{}", termion::cursor::Show).unwrap();
 }
 
-fn render_frame(w: usize, h: usize, f_d: FrameData) -> String {
+fn render_frame(f_d: &FrameData) -> String {
     
+    let w: usize = f_d.get_width();
+    let h: usize = f_d.get_height();
     let f: &Figure = f_d.get_figure();
     let b: &Vec<Vec<FrameBlock>> = f_d.get_blocks();
 
@@ -16,7 +78,7 @@ fn render_frame(w: usize, h: usize, f_d: FrameData) -> String {
     
     (0..h).for_each(|frame_line| {
         (0..w).for_each(|frame_col| {
-            eprintln!("frame_col: {}, frame_line: {}", frame_col, frame_line);
+            /* eprintln!("frame_col: {}, frame_line: {}", frame_col, frame_line); */
             let mut current_char = ' ';
             let current_block: &FrameBlock = &b[frame_line][frame_col];
             
@@ -53,8 +115,11 @@ fn render_frame(w: usize, h: usize, f_d: FrameData) -> String {
             
             }
             result.push(current_char);
+            if frame_col > 0 && frame_col < w - 1  {
+                result.push(current_char);
+            }
     });
-    result += "\n"
+    result += "\n\r"
 });
 return result;
 }
