@@ -2,6 +2,8 @@ use crate::figure::Figure;
 use crate::frameblock::FrameBlock;
 use crate::position::Position;
 pub struct FrameData {
+    round: usize,
+    score: usize,
     width: usize,
     height: usize,
     figure: Figure,
@@ -24,6 +26,8 @@ impl FrameData {
         }
 
         FrameData {
+            round: (0),
+            score: (0),
             width: (frame_width),
             height: (frame_height),
             figure: (f),
@@ -49,9 +53,11 @@ impl FrameData {
     pub fn stats(&self) -> String {
         let b = self.figure.blocks().unwrap();
         let s = format!(
-            "\n\rFrame:[{}x{}]\n\rFigure:[{}:{}, {}:{}, {}:{}, {}:{}]\n\r",
+            "\n\rFrame:[{}x{}]; Round: {}; Score: {}\n\rFigure:[{}:{}, {}:{}, {}:{}, {}:{}]\n\r",
             self.get_width(),
             self.get_height(),
+            self.round,
+            self.score,
             b[0].get_x(),
             b[0].get_y(),
             b[1].get_x(),
@@ -71,6 +77,7 @@ impl FrameData {
             _ = bb.set_data('O');
             _ = bb.set_busy(true);
         }
+        self.round += 1;
     }
 
     pub fn move_figure_down(&mut self) -> &mut Figure {
