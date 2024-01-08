@@ -8,6 +8,7 @@ use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
+use tetris_rust::constants::{H_INDENT, W_INDENT};
 use tetris_rust::figure::Figure;
 use tetris_rust::frameblock::FrameBlock;
 use tetris_rust::framedata::FrameData;
@@ -34,6 +35,16 @@ fn main() {
     loop {
         let mut command: String = "".to_string();
 
+        if frame_data.get_figure().updated().as_millis() >= 500 {
+            match frame_data.move_figure_down() {
+                Ok(_) => {}
+                Err(t) => {
+                    println!("GAME OVER: {}", t);
+                    break;
+                }
+            }
+        }
+
         let c = stdin.next();
 
         match c {
@@ -51,10 +62,19 @@ fn main() {
                     frame_data.move_figure_right();
                     command = format!("→")
                 }
-                Key::Up => command = format!("↑"),
+                Key::Up => {
+                    frame_data.turn_figure();
+                    command = format!("↑")
+                }
                 Key::Down => {
-                    frame_data.move_figure_down();
-                    command = format!("↓")
+                    command = format!("↓");
+                    match frame_data.move_figure_down() {
+                        Ok(_) => {}
+                        Err(t) => {
+                            println!("GAME OVER: {}", t);
+                            break;
+                        }
+                    }
                 }
                 Key::Backspace => command = format!("×"),
                 _ => {}
@@ -81,8 +101,8 @@ fn main() {
 }
 
 fn render_frame(f_d: &FrameData) -> String {
-    let w: usize = f_d.get_width();
-    let h: usize = f_d.get_height();
+    let w: usize = f_d.get_width() + W_INDENT;
+    let h: usize = f_d.get_height() + H_INDENT;
     let f: &Figure = f_d.get_figure();
     let b: &Vec<Vec<FrameBlock>> = f_d.get_blocks();
 
@@ -92,37 +112,42 @@ fn render_frame(f_d: &FrameData) -> String {
         (0..w).for_each(|frame_col| {
             /* eprintln!("frame_col: {}, frame_line: {}", frame_col, frame_line); */
             let mut current_char = ' ';
-            let current_block: &FrameBlock = &b[frame_line][frame_col];
 
-            if f.is_here(frame_col, frame_line) {
-                current_char = 'X';
-            } else if current_block.is_busy() {
-                current_char = current_block.get_data()
+            if frame_col >= W_INDENT && frame_line >= H_INDENT {
+                let current_block: &FrameBlock = &b[frame_line - H_INDENT][frame_col - W_INDENT];
+
+                if f.is_here(frame_col, frame_line) {
+                    current_char = '█';
+                } else if current_block.is_busy() {
+                    current_char = current_block.get_data()
+                }
             }
 
-            if frame_col == 0 || frame_col == w - 1 {
+            if (frame_line > H_INDENT && frame_line < h)
+                && (frame_col == W_INDENT || frame_col == w - 1)
+            {
                 current_char = '║';
             }
 
-            if frame_line == 0 {
-                if frame_col == 0 {
+            if frame_line == H_INDENT {
+                if frame_col == W_INDENT {
                     current_char = '╔';
                 } else if frame_col == w - 1 {
                     current_char = '╗';
-                } else {
+                } else if frame_col > W_INDENT && frame_col < w {
                     current_char = '═';
                 }
             } else if frame_line == h - 1 {
-                if frame_col == 0 {
+                if frame_col == W_INDENT {
                     current_char = '╚';
                 } else if frame_col == w - 1 {
                     current_char = '╝';
-                } else {
+                } else if frame_col > W_INDENT && frame_col < w {
                     current_char = '═';
                 }
             }
             result.push(current_char);
-            if frame_col > 0 && frame_col < w - 1 {
+            if frame_col > W_INDENT && frame_col < w - 1 {
                 result.push(current_char);
             }
         });

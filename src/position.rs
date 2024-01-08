@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Position {
     x: usize,
     y: usize,
